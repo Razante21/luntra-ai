@@ -2,53 +2,61 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { prompt, model, width, height, token } = req.body;
+  const { prompt, aspect_ratio, google_key } = req.body;
+  if (!prompt || !google_key) return res.status(400).json({ error: 'prompt e google_key obrigatorios' });
 
-  if (!prompt || !model || !token) {
-    return res.status(400).json({ error: 'prompt, model e token são obrigatórios' });
-  }
+  const models = [
+    'imagen-4.0-fast-generate-001',
+    'imagen-4.0-generate-001',
+    'imagen-4.0-ultra-generate-001',
+  ];
 
-  try {
-    const hfRes = await fetch(
-      `https://router.huggingface.co/hf-inference/models/${model}`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            width: width || 512,
-            height: height || 512,
-            num_inference_steps: 4,
-          },
-        }),
+  let lastError = null;
+
+  for (const model of models) {
+    try {
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${google_key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            instances: [{ prompt }],
+            parameters: { sampleCount: 1, aspectRatio: aspect_ratio || '1:1' }
+          }),
+        }
+      );
+
+      if (r.status === 429) {
+        lastError = `${model}: limite diário atingido`;
+        continue;
       }
-    );
 
-    if (!hfRes.ok) {
-      const errText = await hfRes.text();
-      let parsed = {};
-      try { parsed = JSON.parse(errText); } catch (_) {}
-      return res.status(hfRes.status).json({
-        error: parsed.error || `Erro ${hfRes.status}`,
-        status: hfRes.status,
-      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        lastError = `${model}: ${e.error?.message || 'Erro ' + r.status}`;
+        continue;
+      }
+
+      const data = await r.json();
+      const b64  = data.predictions?.[0]?.bytesBase64Encoded;
+      const mime = data.predictions?.[0]?.mimeType || 'image/png';
+
+      if (!b64) { lastError = `${model}: sem imagem na resposta`; continue; }
+
+      res.setHeader('Content-Type', mime);
+      res.setHeader('X-Provider-Used', model);
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).send(Buffer.from(b64, 'base64'));
+
+    } catch (err) {
+      lastError = `${model}: ${err.message}`;
+      continue;
     }
-
-    const blob = await hfRes.arrayBuffer();
-    const contentType = hfRes.headers.get('content-type') || 'image/jpeg';
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'no-store');
-    res.status(200).send(Buffer.from(blob));
-
-  } catch (err) {
-    res.status(500).json({ error: err.message || 'Erro interno' });
   }
+
+  return res.status(503).json({ error: lastError || 'Todos os modelos Imagen falharam' });
 }
