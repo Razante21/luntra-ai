@@ -145,7 +145,7 @@ footer{border-top:1px solid var(--border2);padding:28px 40px;display:flex;align-
   </div>
   <div class="trust">
     <span>&#9889; Claude gera os prompts</span>
-    <span>&#127963; Imagen 4 Fast &rarr; Normal &rarr; Ultra</span>
+    <span>&#127963; Gemini 2.5 Flash Imagen 4 Fast &rarr; Normal &rarr; Ultrararr; Gemini 2.0 Flash Imagen 4 Fast &rarr; Normal &rarr; Ultrararr; Imagen 4 Fast</span>
     <span>&#8987; Fallback automático entre modelos</span>
   </div>
 </section>
@@ -153,7 +153,7 @@ footer{border-top:1px solid var(--border2);padding:28px 40px;display:flex;align-
 <section class="sec" id="ferramenta">
   <div class="slabel">// Ferramenta ao vivo</div>
   <h2 class="sh2">Gere sua <span style="color:var(--green)">Sequência</span> Agora</h2>
-  <p class="ssub">Cole sua chave do Google AI Studio. O sistema tenta Imagen 4 Fast primeiro e sobe de modelo automaticamente se atingir o limite.</p>
+  <p class="ssub">Cole sua chave do Google AI Studio. O sistema usa Gemini Flash (grátis, 500/dia) e só usa Imagen 4 Fast (pago) se os outros falharem.</p>
 
   <div class="key-card">
     <div class="key-header">
@@ -161,16 +161,16 @@ footer{border-top:1px solid var(--border2);padding:28px 40px;display:flex;align-
       <span class="key-title">Chave Google AI Studio</span>
     </div>
     <div class="key-models">
-      <span class="key-model-pill m1">1&ordm; Imagen 4 Fast &mdash; 25/dia</span>
-      <span class="key-model-pill">2&ordm; Imagen 4 &mdash; 25/dia</span>
-      <span class="key-model-pill">3&ordm; Imagen 4 Ultra &mdash; 25/dia</span>
+      <span class="key-model-pill m1">11&ordm; Imagen 4 Fast &mdash; 25/diaordm; Gemini 2.5 Flash 1&ordm; Imagen 4 Fast &mdash; 25/diamdash; 500/dia grátis</span>
+      <span class="key-model-pill">22&ordm; Imagen 4 &mdash; 25/diaordm; Gemini 2.0 Flash 2&ordm; Imagen 4 &mdash; 25/diamdash; grátis</span>
+      <span class="key-model-pill">33&ordm; Imagen 4 Ultra &mdash; 25/diaordm; Imagen 4 Fast 3&ordm; Imagen 4 Ultra &mdash; 25/diamdash; fallback pago</span>
     </div>
     <div class="key-row">
       <input type="password" class="key-inp" id="gkey" placeholder="AIzaSy...">
       <button class="key-btn" onclick="saveKey()">Salvar Chave</button>
     </div>
     <div class="key-ok" id="key-ok">&#10003; Chave salva &mdash; pronto para gerar!</div>
-    <div class="key-note">Grátis em <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> &rarr; Create API Key &mdash; até 75 imagens/dia no total entre os 3 modelos.</div>
+    <div class="key-note">Grátis em <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> &rarr; Create API Key &mdash; até 500 imagens/dia grátis com Gemini Flash.</div>
   </div>
 
   <div class="provider-bar">
@@ -232,7 +232,7 @@ footer{border-top:1px solid var(--border2);padding:28px 40px;display:flex;align-
   <div class="steps-grid">
     <div class="step"><div class="snum">// PASSO 01</div><div class="stitle">Cole a Chave Google</div><div class="sdesc">Uma só chave do Google AI Studio dá acesso aos 3 modelos Imagen 4 — até 75 imagens grátis por dia.</div></div>
     <div class="step"><div class="snum">// PASSO 02</div><div class="stitle">Descreva em Português</div><div class="sdesc">Claude traduz e cria prompts profissionais em inglês, otimizados para cada uma das 6 imagens da sequência.</div></div>
-    <div class="step"><div class="snum">// PASSO 03</div><div class="stitle">Fallback Automático</div><div class="sdesc">Fast &rarr; Normal &rarr; Ultra. O sistema troca de modelo sozinho ao atingir o limite, sem você precisar fazer nada.</div></div>
+    <div class="step"><div class="snum">// PASSO 03</div><div class="stitle">Fallback Automático</div><div class="sdesc">Gemini 2.5 Flash Fast &rarr; Normal &rarr; Ultra. O sistema troca de modelo sozinho ao atingir o limite, sem você precisar fazer nada.rarr; Gemini 2.0 Flash Fast &rarr; Normal &rarr; Ultra. O sistema troca de modelo sozinho ao atingir o limite, sem você precisar fazer nada.rarr; Imagen 4 Fast. Troca sozinho, os dois primeiros são totalmente grátis.</div></div>
   </div>
 </section>
 
@@ -245,7 +245,7 @@ footer{border-top:1px solid var(--border2);padding:28px 40px;display:flex;align-
       <div class="sc"><div class="sc-lbl">Aumento de Conversão</div><div class="sc-num">+142<span class="sc-sfx">%</span></div><div class="sc-note">&#9889; AI FULLY OPTIMIZED</div></div>
     </div>
     <div class="cta">
-      <div><h3>Comece agora — é grátis</h3><p>Claude + Google Imagen 4 Fast / Normal / Ultra &mdash; 75 imagens/dia</p></div>
+      <div><h3>Comece agora — é grátis</h3><p>Gemini 2.5 Flash + 2.0 Flash (grátis 500/dia) + Imagen 4 Fast (fallback)</p></div>
       <button class="btn-p" onclick="document.getElementById('ferramenta').scrollIntoView({behavior:'smooth'})">Gerar Agora &rarr;</button>
     </div>
   </div>
@@ -268,7 +268,7 @@ var GKEY = localStorage.getItem('google_key') || '';
 if (GKEY) {
   document.getElementById('gkey').value = GKEY;
   document.getElementById('key-ok').style.display = 'flex';
-  document.getElementById('pbar-txt').textContent = '// Usando: Imagen 4 Fast \u2192 Imagen 4 \u2192 Imagen 4 Ultra (fallback autom\u00e1tico)';
+  document.getElementById('pbar-txt').textContent = '// Usando: Gemini 2.5 Flash \u2192 Gemini 2.0 Flash \u2192 Imagen 4 Fast (fallback autom\u00e1tico)';
 }
 
 function saveKey() {
@@ -277,7 +277,7 @@ function saveKey() {
   GKEY = v;
   localStorage.setItem('google_key', v);
   document.getElementById('key-ok').style.display = 'flex';
-  document.getElementById('pbar-txt').textContent = '// Usando: Imagen 4 Fast \u2192 Imagen 4 \u2192 Imagen 4 Ultra (fallback autom\u00e1tico)';
+  document.getElementById('pbar-txt').textContent = '// Usando: Gemini 2.5 Flash \u2192 Gemini 2.0 Flash \u2192 Imagen 4 Fast (fallback autom\u00e1tico)';
 }
 
 function handleFile(input) {
