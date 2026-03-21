@@ -243,7 +243,7 @@ function resumeProgress() {
   const done = Object.keys(state.generatedImages).length;
   if (done > 0) {
     buildGrid();
-    Object.entries(state.generatedImages).forEach(([id, b64]) => renderPhoto(parseInt(id), b64));
+    Object.entries(state.generatedImages).forEach(([id, b64]) => { addCard(parseInt(id)-1); renderPhoto(parseInt(id), b64); });
     document.getElementById('photosCount').textContent = done + ' / 9';
     document.getElementById('photosSection').classList.add('active');
     document.getElementById('generateBtn').textContent = '↺ Gerar novamente';
@@ -310,11 +310,11 @@ function handleFile(input) {
   reader.onload = e => {
     const img = new Image();
     img.onload = () => {
-      const MAX = 1024; let w = img.width, h = img.height;
+      const MAX = 512; let w = img.width, h = img.height;
       if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h*MAX/w); w = MAX; } else { w = Math.round(w*MAX/h); h = MAX; } }
       const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const resized = canvas.toDataURL('image/jpeg', 0.85);
+      const resized = canvas.toDataURL('image/jpeg', 0.7);
       state.originalBase64 = resized.split(',')[1]; state.originalMime = 'image/jpeg';
       document.getElementById('previewImg').src = resized;
       document.getElementById('previewImg').style.display = 'block';
@@ -338,9 +338,18 @@ uploadBox.addEventListener('drop', e => {
 
 function buildGrid() {
   const grid = document.getElementById('photosGrid'); grid.innerHTML = '';
-  PHOTO_NAMES.forEach((name, i) => {
-    grid.innerHTML += '<div class="photo-card" id="card-'+(i+1)+'"><div class="photo-header"><div><div class="photo-num">Foto '+(i+1)+'</div><div class="photo-name">'+name+'</div></div><div class="photo-status" id="status-'+(i+1)+'"></div></div><div class="photo-placeholder" id="placeholder-'+(i+1)+'">aguardando...</div><div class="photo-actions" id="actions-'+(i+1)+'" style="display:none"></div></div>';
-  });
+  // Começa com grid vazio — cards aparecem 1 por vez durante a geração
+}
+
+function addCard(i) {
+  const name = PHOTO_NAMES[i];
+  const grid = document.getElementById('photosGrid');
+  const div = document.createElement('div');
+  div.className = 'photo-card'; div.id = 'card-'+(i+1);
+  div.innerHTML = '<div class="photo-header"><div><div class="photo-num">Foto '+(i+1)+'</div><div class="photo-name">'+name+'</div></div><div class="photo-status loading" id="status-'+(i+1)+'"></div></div><div class="photo-placeholder" id="placeholder-'+(i+1)+'">gerando...</div><div class="photo-actions" id="actions-'+(i+1)+'" style="display:none"></div>';
+  grid.appendChild(div);
+  // Scroll suave até o card
+  setTimeout(() => div.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
 }
 
 function renderPhoto(id, b64) {
@@ -381,9 +390,9 @@ async function startGeneration() {
 
   let done = 0;
   for (const p of state.prompts) {
+    addCard(p.id - 1); // aparece 1 card de cada vez
     setStatus('<strong>FLUX</strong> gerando foto '+p.id+'/9 — '+PHOTO_NAMES[p.id-1]+'...');
     document.getElementById('status-'+p.id).className = 'photo-status loading';
-    document.getElementById('placeholder-'+p.id).textContent = 'gerando...';
     try {
       const res = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: p.prompt, photoId: p.id }) });
       const data = await res.json();
