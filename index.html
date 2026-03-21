@@ -1,62 +1,401 @@
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luntra — Fotos para Marketplace</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #141414;
+    --bg3: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #888;
+    --accent: #7c3aed;
+    --accent2: #a855f7;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
 
-  const { prompt, aspect_ratio, google_key } = req.body;
-  if (!prompt || !google_key) return res.status(400).json({ error: 'prompt e google_key obrigatorios' });
+  header { padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 20px; font-weight: 600; background: linear-gradient(135deg, var(--accent2), #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  header span { font-size: 12px; color: var(--muted); background: var(--bg3); padding: 3px 8px; border-radius: 20px; border: 1px solid var(--border); }
 
-  const models = [
-    'imagen-4.0-fast-generate-001',
-    'imagen-4.0-generate-001',
-    'imagen-4.0-ultra-generate-001',
-  ];
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
 
-  let lastError = null;
+  /* Upload area */
+  .upload-section { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+  .upload-box { border: 2px dashed var(--border); border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all .2s; background: var(--bg2); }
+  .upload-box:hover, .upload-box.drag { border-color: var(--accent); background: #1a1025; }
+  .upload-box.has-image { border-style: solid; border-color: var(--accent); }
+  .upload-box img { max-width: 100%; max-height: 200px; border-radius: 8px; object-fit: contain; }
+  .upload-icon { font-size: 40px; margin-bottom: 12px; }
+  .upload-box h3 { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+  .upload-box p { font-size: 13px; color: var(--muted); }
+  input[type=file] { display: none; }
 
-  for (const model of models) {
+  .input-group { display: flex; flex-direction: column; gap: 8px; }
+  .input-group label { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .input-group input { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; color: var(--text); font-size: 14px; outline: none; transition: border .2s; }
+  .input-group input:focus { border-color: var(--accent); }
+
+  .btn { padding: 13px 28px; border-radius: 10px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all .2s; }
+  .btn-primary { background: var(--accent); color: #fff; width: 100%; }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--bg3); color: var(--muted); cursor: not-allowed; transform: none; }
+  .btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
+  .btn-danger { background: #2a1010; color: var(--red); border: 1px solid #3a1010; }
+  .btn-danger:hover { background: #3a1515; }
+  .btn-success { background: #0f2a1a; color: var(--green); border: 1px solid #1a3a25; }
+
+  /* Status bar */
+  .status { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: none; }
+  .status.active { display: flex; align-items: center; gap: 12px; }
+  .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent2); border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status-text { font-size: 14px; color: var(--muted); }
+  .status-text strong { color: var(--text); }
+
+  /* Grid de fotos */
+  .photos-section { display: none; }
+  .photos-section.active { display: block; }
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title span { font-size: 12px; color: var(--muted); font-weight: 400; }
+
+  .photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 700px) { .photos-grid { grid-template-columns: repeat(2, 1fr); } .upload-section { grid-template-columns: 1fr; } }
+
+  .photo-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: border .2s; }
+  .photo-card.error { border-color: var(--red); }
+  .photo-card.ok { border-color: var(--green); }
+  .photo-header { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .photo-num { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .photo-name { font-size: 12px; color: var(--text); font-weight: 500; }
+  .photo-status { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .photo-status.loading { background: var(--amber); animation: pulse 1s infinite; }
+  .photo-status.done { background: var(--green); }
+  .photo-status.error { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .photo-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: var(--bg3); }
+  .photo-placeholder { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: var(--bg3); color: var(--muted); font-size: 12px; }
+
+  .photo-actions { padding: 10px 14px; display: flex; gap: 8px; }
+
+  /* Feedback modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; }
+  .modal h3 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+  .modal p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .modal textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text); font-size: 14px; resize: vertical; min-height: 90px; outline: none; font-family: inherit; }
+  .modal textarea:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .modal-actions .btn { flex: 1; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-outline:hover { border-color: var(--text); color: var(--text); }
+
+  /* Feedback result */
+  .feedback-result { background: var(--bg3); border-radius: 10px; padding: 14px; margin-top: 16px; display: none; }
+  .feedback-result.active { display: block; }
+  .feedback-result h4 { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+  .feedback-result ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .feedback-result li { font-size: 12px; color: var(--muted); padding-left: 14px; position: relative; }
+  .feedback-result li::before { content: '→'; position: absolute; left: 0; color: var(--accent2); }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+  .tag.grave { background: #2a1010; color: var(--red); }
+  .tag.moderado { background: #2a1f00; color: var(--amber); }
+  .tag.leve { background: #0f2a1a; color: var(--green); }
+
+  .rules-updated { font-size: 12px; color: var(--green); margin-top: 10px; display: flex; align-items: center; gap: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Luntra</h1>
+  <span>Gemini + FLUX</span>
+</header>
+
+<div class="container">
+
+  <!-- Upload + configuração -->
+  <div class="upload-section">
+    <div>
+      <div class="upload-box" id="uploadBox" onclick="document.getElementById('fileInput').click()">
+        <div id="uploadPlaceholder">
+          <div class="upload-icon">📦</div>
+          <h3>Foto do produto</h3>
+          <p>Clique ou arraste a imagem aqui</p>
+        </div>
+        <img id="previewImg" style="display:none">
+      </div>
+      <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this)">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;justify-content:space-between">
+      <div class="input-group">
+        <label>Nome do produto</label>
+        <input type="text" id="productName" placeholder="Ex: Guardanapo de papel 40x40 25un">
+      </div>
+      <button class="btn btn-primary" id="generateBtn" onclick="startGeneration()" disabled>
+        Gerar 9 fotos →
+      </button>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="status" id="statusBar">
+    <div class="spinner"></div>
+    <div class="status-text" id="statusText">Aguardando...</div>
+  </div>
+
+  <!-- Grid de fotos -->
+  <div class="photos-section" id="photosSection">
+    <div class="section-title">
+      Fotos geradas <span id="photosCount"></span>
+    </div>
+    <div class="photos-grid" id="photosGrid"></div>
+  </div>
+
+</div>
+
+<!-- Modal de feedback -->
+<div class="modal-overlay" id="feedbackModal">
+  <div class="modal">
+    <h3>Reportar erro — <span id="modalPhotoName"></span></h3>
+    <p>Descreva o que ficou errado nessa foto. O Gemini vai analisar e atualizar as regras automaticamente.</p>
+    <textarea id="errorDesc" placeholder="Ex: a cor do produto ficou diferente, ficou azul em vez de branco"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitFeedback()">Analisar e corrigir</button>
+    </div>
+    <div class="feedback-result" id="feedbackResult">
+      <span class="tag" id="severityTag"></span>
+      <h4 id="feedbackSummary"></h4>
+      <ul id="feedbackErrors"></ul>
+      <div class="rules-updated" id="rulesUpdated" style="display:none">
+        ✓ Regras do .md atualizadas — próxima geração já vai melhorar
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PHOTO_NAMES = [
+  'Hero shot', 'Benefício principal', 'Como usar', 'Tamanho e quantidade',
+  'Cenário casual', 'Cenário elegante', 'Especificações', 'Destaque competitivo', 'CTA'
+];
+
+let state = {
+  originalBase64: null,
+  originalMime: null,
+  prompts: [],
+  generatedImages: {},
+  modalPhotoId: null,
+};
+
+// Upload
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    const base64 = dataUrl.split(',')[1];
+    state.originalBase64 = base64;
+    state.originalMime = file.type;
+    document.getElementById('previewImg').src = dataUrl;
+    document.getElementById('previewImg').style.display = 'block';
+    document.getElementById('uploadPlaceholder').style.display = 'none';
+    document.getElementById('uploadBox').classList.add('has-image');
+    document.getElementById('generateBtn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Drag and drop
+const uploadBox = document.getElementById('uploadBox');
+uploadBox.addEventListener('dragover', e => { e.preventDefault(); uploadBox.classList.add('drag'); });
+uploadBox.addEventListener('dragleave', () => uploadBox.classList.remove('drag'));
+uploadBox.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadBox.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('fileInput').files = dt.files;
+    handleFile(document.getElementById('fileInput'));
+  }
+});
+
+function setStatus(msg) {
+  document.getElementById('statusBar').classList.add('active');
+  document.getElementById('statusText').innerHTML = msg;
+}
+
+function hideStatus() {
+  document.getElementById('statusBar').classList.remove('active');
+}
+
+async function startGeneration() {
+  if (!state.originalBase64) return;
+  document.getElementById('generateBtn').disabled = true;
+
+  // Inicializa grid
+  document.getElementById('photosSection').classList.add('active');
+  document.getElementById('photosCount').textContent = '0 / 9';
+  const grid = document.getElementById('photosGrid');
+  grid.innerHTML = '';
+  PHOTO_NAMES.forEach((name, i) => {
+    grid.innerHTML += `
+      <div class="photo-card" id="card-${i+1}">
+        <div class="photo-header">
+          <div>
+            <div class="photo-num">Foto ${i+1}</div>
+            <div class="photo-name">${name}</div>
+          </div>
+          <div class="photo-status loading" id="status-${i+1}"></div>
+        </div>
+        <div class="photo-placeholder" id="placeholder-${i+1}">aguardando...</div>
+        <div class="photo-actions" id="actions-${i+1}" style="display:none"></div>
+      </div>`;
+  });
+
+  // 1. Gemini analisa produto e gera prompts
+  setStatus('<strong>Gemini</strong> analisando o produto e criando os 9 prompts...');
+  try {
+    const analyzeRes = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        imageBase64: state.originalBase64,
+        mimeType: state.originalMime,
+        productName: document.getElementById('productName').value
+      })
+    });
+    const analyzeData = await analyzeRes.json();
+    state.prompts = analyzeData.prompts || [];
+  } catch (err) {
+    setStatus(`<span style="color:var(--red)">Erro ao analisar produto: ${err.message}</span>`);
+    document.getElementById('generateBtn').disabled = false;
+    return;
+  }
+
+  // 2. Gera cada foto sequencialmente
+  let done = 0;
+  for (const p of state.prompts) {
+    setStatus(`<strong>FLUX</strong> gerando foto ${p.id}/9: ${PHOTO_NAMES[p.id-1]}...`);
+    document.getElementById(`status-${p.id}`).className = 'photo-status loading';
+    document.getElementById(`placeholder-${p.id}`).textContent = 'gerando...';
+
     try {
-      const r = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${google_key}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            instances: [{ prompt }],
-            parameters: { sampleCount: 1, aspectRatio: aspect_ratio || '1:1' }
-          }),
-        }
-      );
+      const genRes = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: p.prompt, photoId: p.id })
+      });
+      const genData = await genRes.json();
 
-      if (r.status === 429) {
-        lastError = `${model}: limite diário atingido`;
-        continue;
+      if (genData.imageBase64) {
+        state.generatedImages[p.id] = genData.imageBase64;
+        const card = document.getElementById(`card-${p.id}`);
+        document.getElementById(`placeholder-${p.id}`).remove();
+        const img = document.createElement('img');
+        img.className = 'photo-img';
+        img.src = `data:image/jpeg;base64,${genData.imageBase64}`;
+        card.querySelector('.photo-actions').before(img);
+        document.getElementById(`status-${p.id}`).className = 'photo-status done';
+        document.getElementById(`actions-${p.id}`).style.display = 'flex';
+        document.getElementById(`actions-${p.id}`).innerHTML = `
+          <button class="btn btn-sm btn-success" onclick="downloadPhoto(${p.id})">↓ Baixar</button>
+          <button class="btn btn-sm btn-danger" onclick="openModal(${p.id})">✕ Reportar erro</button>`;
+        done++;
+        document.getElementById('photosCount').textContent = `${done} / 9`;
       }
-
-      if (!r.ok) {
-        const e = await r.json().catch(() => ({}));
-        lastError = `${model}: ${e.error?.message || 'Erro ' + r.status}`;
-        continue;
-      }
-
-      const data = await r.json();
-      const b64  = data.predictions?.[0]?.bytesBase64Encoded;
-      const mime = data.predictions?.[0]?.mimeType || 'image/png';
-
-      if (!b64) { lastError = `${model}: sem imagem na resposta`; continue; }
-
-      res.setHeader('Content-Type', mime);
-      res.setHeader('X-Provider-Used', model);
-      res.setHeader('Cache-Control', 'no-store');
-      return res.status(200).send(Buffer.from(b64, 'base64'));
-
     } catch (err) {
-      lastError = `${model}: ${err.message}`;
-      continue;
+      document.getElementById(`status-${p.id}`).className = 'photo-status error';
+      document.getElementById(`placeholder-${p.id}`).textContent = 'erro ao gerar';
     }
   }
 
-  return res.status(503).json({ error: lastError || 'Todos os modelos Imagen falharam' });
+  hideStatus();
+  document.getElementById('generateBtn').disabled = false;
+  document.getElementById('generateBtn').textContent = '↺ Gerar novamente';
 }
+
+function downloadPhoto(id) {
+  const b64 = state.generatedImages[id];
+  if (!b64) return;
+  const a = document.createElement('a');
+  a.href = `data:image/jpeg;base64,${b64}`;
+  a.download = `foto-${id}-${PHOTO_NAMES[id-1].toLowerCase().replace(/ /g,'-')}.jpg`;
+  a.click();
+}
+
+// Modal de feedback
+function openModal(photoId) {
+  state.modalPhotoId = photoId;
+  document.getElementById('modalPhotoName').textContent = `Foto ${photoId} — ${PHOTO_NAMES[photoId-1]}`;
+  document.getElementById('errorDesc').value = '';
+  document.getElementById('feedbackResult').classList.remove('active');
+  document.getElementById('feedbackModal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('feedbackModal').classList.remove('active');
+}
+
+async function submitFeedback() {
+  const photoId = state.modalPhotoId;
+  const errorDesc = document.getElementById('errorDesc').value.trim();
+  const genBase64 = state.generatedImages[photoId];
+  if (!genBase64 || !state.originalBase64) return;
+
+  document.querySelector('#feedbackModal .btn-primary').textContent = 'Analisando...';
+  document.querySelector('#feedbackModal .btn-primary').disabled = true;
+
+  try {
+    const res = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        originalBase64: state.originalBase64,
+        generatedBase64: genBase64,
+        originalMime: state.originalMime,
+        generatedMime: 'image/jpeg',
+        errorDescription: errorDesc,
+        photoName: PHOTO_NAMES[photoId-1]
+      })
+    });
+    const data = await res.json();
+
+    const result = document.getElementById('feedbackResult');
+    result.classList.add('active');
+    document.getElementById('severityTag').textContent = data.severidade || '';
+    document.getElementById('severityTag').className = `tag ${data.severidade || ''}`;
+    document.getElementById('feedbackSummary').textContent = data.resumo || '';
+    document.getElementById('feedbackErrors').innerHTML = (data.errosDetectados || []).map(e => `<li>${e}</li>`).join('');
+    document.getElementById('rulesUpdated').style.display = data.rulesUpdated ? 'flex' : 'none';
+
+    // Marca o card como erro
+    document.getElementById(`card-${photoId}`).classList.add('error');
+
+  } catch (err) {
+    alert('Erro ao processar feedback: ' + err.message);
+  }
+
+  document.querySelector('#feedbackModal .btn-primary').textContent = 'Analisar e corrigir';
+  document.querySelector('#feedbackModal .btn-primary').disabled = false;
+}
+
+document.getElementById('feedbackModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('feedbackModal')) closeModal();
+});
+</script>
+</body>
+</html>
