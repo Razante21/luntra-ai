@@ -81,6 +81,12 @@ Responda APENAS com JSON válido neste formato exato:
       }
     );
 
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Gemini error:', response.status, errText);
+      return res.status(500).json({ error: `Gemini retornou erro ${response.status}`, detail: errText.slice(0, 200) });
+    }
+
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const clean = text.replace(/```json|```/g, '').trim();
