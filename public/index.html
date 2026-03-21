@@ -374,7 +374,6 @@ async function startGeneration() {
   document.getElementById('photosSection').classList.add('active');
   document.getElementById('photosCount').textContent = '0 / 9';
   buildGrid();
-  PHOTO_NAMES.forEach((_,i) => { document.getElementById('status-'+(i+1)).className='photo-status loading'; });
 
   setStatus('<strong>Gemini</strong> analisando o produto e criando os 9 prompts...');
   try {
