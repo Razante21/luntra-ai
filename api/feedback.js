@@ -1,6 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 
+export const config = {
+  api: { bodyParser: { sizeLimit: '10mb' } }
+};
+
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 function loadRules() {
