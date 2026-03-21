@@ -7,27 +7,23 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #0a0a0a;
-    --bg2: #141414;
-    --bg3: #1e1e1e;
-    --border: #2a2a2a;
-    --text: #f0f0f0;
-    --muted: #888;
-    --accent: #7c3aed;
-    --accent2: #a855f7;
-    --green: #22c55e;
-    --red: #ef4444;
-    --amber: #f59e0b;
+    --bg: #0a0a0a; --bg2: #141414; --bg3: #1e1e1e;
+    --border: #2a2a2a; --text: #f0f0f0; --muted: #888;
+    --accent: #7c3aed; --accent2: #a855f7;
+    --green: #22c55e; --red: #ef4444; --amber: #f59e0b;
   }
   body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
-
-  header { padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  header { padding: 16px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
   header h1 { font-size: 20px; font-weight: 600; background: linear-gradient(135deg, var(--accent2), #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   header span { font-size: 12px; color: var(--muted); background: var(--bg3); padding: 3px 8px; border-radius: 20px; border: 1px solid var(--border); }
-
+  .tabs { display: flex; gap: 4px; padding: 0 32px; border-bottom: 1px solid var(--border); }
+  .tab { padding: 12px 20px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; background: none; border-top: none; border-left: none; border-right: none; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+  .tab-badge { display: inline-block; background: var(--bg3); color: var(--muted); font-size: 10px; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
   .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
-
-  /* Upload area */
   .upload-section { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
   .upload-box { border: 2px dashed var(--border); border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all .2s; background: var(--bg2); }
   .upload-box:hover, .upload-box.drag { border-color: var(--accent); background: #1a1025; }
@@ -36,13 +32,12 @@
   .upload-icon { font-size: 40px; margin-bottom: 12px; }
   .upload-box h3 { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
   .upload-box p { font-size: 13px; color: var(--muted); }
+  .upload-formats { font-size: 11px; color: var(--muted); margin-top: 6px; opacity: .6; }
   input[type=file] { display: none; }
-
   .input-group { display: flex; flex-direction: column; gap: 8px; }
   .input-group label { font-size: 13px; color: var(--muted); font-weight: 500; }
   .input-group input { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; color: var(--text); font-size: 14px; outline: none; transition: border .2s; }
   .input-group input:focus { border-color: var(--accent); }
-
   .btn { padding: 13px 28px; border-radius: 10px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all .2s; }
   .btn-primary { background: var(--accent); color: #fff; width: 100%; }
   .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
@@ -51,27 +46,27 @@
   .btn-danger { background: #2a1010; color: var(--red); border: 1px solid #3a1010; }
   .btn-danger:hover { background: #3a1515; }
   .btn-success { background: #0f2a1a; color: var(--green); border: 1px solid #1a3a25; }
-
-  /* Status bar */
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-outline:hover { border-color: var(--text); color: var(--text); }
   .status { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: none; }
   .status.active { display: flex; align-items: center; gap: 12px; }
   .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent2); border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .status-text { font-size: 14px; color: var(--muted); }
   .status-text strong { color: var(--text); }
-
-  /* Grid de fotos */
+  .resume-bar { background: #1a1025; border: 1px solid var(--accent); border-radius: 12px; padding: 14px 20px; margin-bottom: 20px; display: none; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .resume-bar.active { display: flex; }
+  .resume-bar p { font-size: 13px; color: var(--accent2); font-weight: 500; }
+  .resume-bar small { font-size: 12px; color: var(--muted); display: block; margin-top: 2px; }
+  .resume-actions { display: flex; gap: 8px; flex-shrink: 0; }
   .photos-section { display: none; }
   .photos-section.active { display: block; }
   .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
   .section-title span { font-size: 12px; color: var(--muted); font-weight: 400; }
-
   .photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   @media (max-width: 700px) { .photos-grid { grid-template-columns: repeat(2, 1fr); } .upload-section { grid-template-columns: 1fr; } }
-
   .photo-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: border .2s; }
   .photo-card.error { border-color: var(--red); }
-  .photo-card.ok { border-color: var(--green); }
   .photo-header { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
   .photo-num { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
   .photo-name { font-size: 12px; color: var(--text); font-weight: 500; }
@@ -80,26 +75,31 @@
   .photo-status.done { background: var(--green); }
   .photo-status.error { background: var(--red); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-
   .photo-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: var(--bg3); }
   .photo-placeholder { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: var(--bg3); color: var(--muted); font-size: 12px; }
-
   .photo-actions { padding: 10px 14px; display: flex; gap: 8px; }
-
-  /* Feedback modal */
+  .history-empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 14px; line-height: 1.8; }
+  .history-grid { display: flex; flex-direction: column; gap: 12px; }
+  .history-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .history-header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+  .history-header:hover { background: var(--bg3); }
+  .history-title { font-size: 14px; font-weight: 500; }
+  .history-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .history-count { font-size: 12px; color: var(--green); background: #0f2a1a; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+  .history-photos { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); }
+  .history-photos img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; transition: opacity .2s; }
+  .history-photos img:hover { opacity: .75; }
+  .history-photos .no-img { width: 100%; aspect-ratio: 1; background: var(--bg3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--muted); }
+  .history-actions { padding: 0 20px 14px; display: flex; gap: 8px; }
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
   .modal-overlay.active { display: flex; }
-  .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; }
+  .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
   .modal h3 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
   .modal p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
   .modal textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text); font-size: 14px; resize: vertical; min-height: 90px; outline: none; font-family: inherit; }
   .modal textarea:focus { border-color: var(--accent); }
   .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
   .modal-actions .btn { flex: 1; }
-  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-  .btn-outline:hover { border-color: var(--text); color: var(--text); }
-
-  /* Feedback result */
   .feedback-result { background: var(--bg3); border-radius: 10px; padding: 14px; margin-top: 16px; display: none; }
   .feedback-result.active { display: block; }
   .feedback-result h4 { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
@@ -110,7 +110,6 @@
   .tag.grave { background: #2a1010; color: var(--red); }
   .tag.moderado { background: #2a1f00; color: var(--amber); }
   .tag.leve { background: #0f2a1a; color: var(--green); }
-
   .rules-updated { font-size: 12px; color: var(--green); margin-top: 10px; display: flex; align-items: center; gap: 6px; }
 </style>
 </head>
@@ -121,9 +120,25 @@
   <span>Gemini + FLUX</span>
 </header>
 
+<div class="tabs">
+  <button class="tab active" id="btn-tab-gerar" onclick="switchTab('gerar', this)">Gerar fotos</button>
+  <button class="tab" id="btn-tab-historico" onclick="switchTab('historico', this)">Histórico <span class="tab-badge" id="histBadge">0</span></button>
+</div>
+
+<div class="tab-content active" id="tab-gerar">
 <div class="container">
 
-  <!-- Upload + configuração -->
+  <div class="resume-bar" id="resumeBar">
+    <div>
+      <p>Você tem uma geração salva</p>
+      <small id="resumeInfo"></small>
+    </div>
+    <div class="resume-actions">
+      <button class="btn btn-sm btn-outline" onclick="clearProgress()">Descartar</button>
+      <button class="btn btn-sm btn-primary" onclick="resumeProgress()">Continuar</button>
+    </div>
+  </div>
+
   <div class="upload-section">
     <div>
       <div class="upload-box" id="uploadBox" onclick="document.getElementById('fileInput').click()">
@@ -131,10 +146,11 @@
           <div class="upload-icon">📦</div>
           <h3>Foto do produto</h3>
           <p>Clique ou arraste a imagem aqui</p>
+          <div class="upload-formats">JPG · PNG · WebP</div>
         </div>
         <img id="previewImg" style="display:none">
       </div>
-      <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this)">
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" onchange="handleFile(this)">
     </div>
     <div style="display:flex;flex-direction:column;gap:16px;justify-content:space-between">
       <div class="input-group">
@@ -147,28 +163,34 @@
     </div>
   </div>
 
-  <!-- Status -->
   <div class="status" id="statusBar">
     <div class="spinner"></div>
     <div class="status-text" id="statusText">Aguardando...</div>
   </div>
 
-  <!-- Grid de fotos -->
   <div class="photos-section" id="photosSection">
-    <div class="section-title">
-      Fotos geradas <span id="photosCount"></span>
-    </div>
+    <div class="section-title">Fotos geradas <span id="photosCount"></span></div>
     <div class="photos-grid" id="photosGrid"></div>
   </div>
 
 </div>
+</div>
 
-<!-- Modal de feedback -->
+<div class="tab-content" id="tab-historico">
+<div class="container">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div class="section-title" style="margin:0">Histórico de gerações</div>
+    <button class="btn btn-sm btn-danger" onclick="clearHistory()">Limpar tudo</button>
+  </div>
+  <div id="historyList"></div>
+</div>
+</div>
+
 <div class="modal-overlay" id="feedbackModal">
   <div class="modal">
     <h3>Reportar erro — <span id="modalPhotoName"></span></h3>
-    <p>Descreva o que ficou errado nessa foto. O Gemini vai analisar e atualizar as regras automaticamente.</p>
-    <textarea id="errorDesc" placeholder="Ex: a cor do produto ficou diferente, ficou azul em vez de branco"></textarea>
+    <p>Descreva o que ficou errado. O Gemini vai analisar e atualizar as regras automaticamente.</p>
+    <textarea id="errorDesc" placeholder="Ex: a cor ficou diferente, ficou azul em vez de rosa"></textarea>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="submitFeedback()">Analisar e corrigir</button>
@@ -177,47 +199,123 @@
       <span class="tag" id="severityTag"></span>
       <h4 id="feedbackSummary"></h4>
       <ul id="feedbackErrors"></ul>
-      <div class="rules-updated" id="rulesUpdated" style="display:none">
-        ✓ Regras do .md atualizadas — próxima geração já vai melhorar
-      </div>
+      <div class="rules-updated" id="rulesUpdated" style="display:none">✓ Regras atualizadas — próxima geração já vai melhorar</div>
     </div>
   </div>
 </div>
 
 <script>
-const PHOTO_NAMES = [
-  'Hero shot', 'Benefício principal', 'Como usar', 'Tamanho e quantidade',
-  'Cenário casual', 'Cenário elegante', 'Especificações', 'Destaque competitivo', 'CTA'
-];
+const PHOTO_NAMES = ['Hero shot','Benefício principal','Como usar','Tamanho e quantidade','Cenário casual','Cenário elegante','Especificações','Destaque competitivo','CTA'];
+const STORAGE_KEY = 'luntra_progress';
+const HISTORY_KEY = 'luntra_history';
 
-let state = {
-  originalBase64: null,
-  originalMime: null,
-  prompts: [],
-  generatedImages: {},
-  modalPhotoId: null,
-};
+let state = { originalBase64: null, originalMime: null, productName: '', prompts: [], generatedImages: {}, modalPhotoId: null };
 
-// Upload
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'historico') renderHistory();
+}
+
+function saveProgress() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ originalBase64: state.originalBase64, originalMime: state.originalMime, productName: state.productName, prompts: state.prompts, generatedImages: state.generatedImages, savedAt: new Date().toISOString() })); } catch(e) {}
+}
+function loadProgress() { try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch { return null; } }
+function clearProgress() { localStorage.removeItem(STORAGE_KEY); document.getElementById('resumeBar').classList.remove('active'); }
+
+function resumeProgress() {
+  const s = loadProgress();
+  if (!s) return;
+  state.originalBase64 = s.originalBase64; state.originalMime = s.originalMime;
+  state.productName = s.productName || ''; state.prompts = s.prompts || [];
+  state.generatedImages = s.generatedImages || {};
+  document.getElementById('productName').value = state.productName;
+  if (state.originalBase64) {
+    document.getElementById('previewImg').src = 'data:' + state.originalMime + ';base64,' + state.originalBase64;
+    document.getElementById('previewImg').style.display = 'block';
+    document.getElementById('uploadPlaceholder').style.display = 'none';
+    document.getElementById('uploadBox').classList.add('has-image');
+    document.getElementById('generateBtn').disabled = false;
+  }
+  clearProgress();
+  const done = Object.keys(state.generatedImages).length;
+  if (done > 0) {
+    buildGrid();
+    Object.entries(state.generatedImages).forEach(([id, b64]) => renderPhoto(parseInt(id), b64));
+    document.getElementById('photosCount').textContent = done + ' / 9';
+    document.getElementById('photosSection').classList.add('active');
+    document.getElementById('generateBtn').textContent = '↺ Gerar novamente';
+  }
+}
+
+function saveToHistory() {
+  try {
+    const h = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    h.unshift({ id: Date.now(), productName: state.productName || 'Produto', originalBase64: state.originalBase64, originalMime: state.originalMime, images: { ...state.generatedImages }, count: Object.keys(state.generatedImages).length, createdAt: new Date().toISOString() });
+    if (h.length > 20) h.splice(20);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+    updateHistBadge();
+  } catch(e) {}
+}
+
+function updateHistBadge() {
+  try { document.getElementById('histBadge').textContent = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]').length; } catch {}
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  try {
+    const h = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    if (!h.length) { list.innerHTML = '<div class="history-empty">Nenhuma geração salva ainda.<br>Gere suas primeiras fotos na aba "Gerar fotos".</div>'; return; }
+    list.innerHTML = h.map(e => {
+      const date = new Date(e.createdAt).toLocaleString('pt-BR');
+      const thumbs = Array.from({length:9},(_,i) => {
+        const b64 = e.images[i+1];
+        return b64 ? '<img src="data:image/jpeg;base64,' + b64 + '" onclick="dlFromHist(' + e.id + ',' + (i+1) + ',\'' + e.productName.replace(/'/g,'') + '\')" title="Baixar foto ' + (i+1) + '">' : '<div class="no-img">' + (i+1) + '</div>';
+      }).join('');
+      return '<div class="history-item"><div class="history-header" onclick="toggleHist(' + e.id + ')"><div><div class="history-title">' + e.productName + '</div><div class="history-meta">' + date + '</div></div><span class="history-count">' + e.count + '/9 fotos</span></div><div class="history-photos" id="hp-' + e.id + '" style="display:none">' + thumbs + '</div><div class="history-actions" id="ha-' + e.id + '" style="display:none"><button class="btn btn-sm btn-success" onclick="dlAllFromHist(' + e.id + ',\'' + e.productName.replace(/'/g,'') + '\')">↓ Baixar todas</button><button class="btn btn-sm btn-danger" onclick="delHist(' + e.id + ')">Apagar</button></div></div>';
+    }).join('');
+  } catch { list.innerHTML = '<div class="history-empty">Erro ao carregar histórico.</div>'; }
+}
+
+function toggleHist(id) {
+  const p = document.getElementById('hp-'+id), a = document.getElementById('ha-'+id);
+  const open = p.style.display !== 'none';
+  p.style.display = open ? 'none' : 'grid';
+  a.style.display = open ? 'none' : 'flex';
+}
+
+function dlFromHist(entryId, photoId, name) {
+  try { const h = JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); const e = h.find(x=>x.id==entryId); if(!e||!e.images[photoId]) return; const a=document.createElement('a'); a.href='data:image/jpeg;base64,'+e.images[photoId]; a.download=name+'-foto'+photoId+'.jpg'; a.click(); } catch {}
+}
+
+function dlAllFromHist(entryId, name) {
+  try { const h = JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); const e = h.find(x=>x.id==entryId); if(!e) return; Object.entries(e.images).forEach(([id,b64],i)=>{ setTimeout(()=>{ const a=document.createElement('a'); a.href='data:image/jpeg;base64,'+b64; a.download=name+'-foto'+id+'.jpg'; a.click(); }, i*300); }); } catch {}
+}
+
+function delHist(id) {
+  try { let h=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); h=h.filter(e=>e.id!=id); localStorage.setItem(HISTORY_KEY,JSON.stringify(h)); renderHistory(); updateHistBadge(); } catch {}
+}
+
+function clearHistory() {
+  if (!confirm('Apagar todo o histórico?')) return;
+  localStorage.removeItem(HISTORY_KEY); renderHistory(); updateHistBadge();
+}
+
 function handleFile(input) {
-  const file = input.files[0];
-  if (!file) return;
+  const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
     const img = new Image();
     img.onload = () => {
-      const MAX = 1024;
-      let w = img.width, h = img.height;
-      if (w > MAX || h > MAX) {
-        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-        else { w = Math.round(w * MAX / h); h = MAX; }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
+      const MAX = 1024; let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h*MAX/w); w = MAX; } else { w = Math.round(w*MAX/h); h = MAX; } }
+      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       const resized = canvas.toDataURL('image/jpeg', 0.85);
-      state.originalBase64 = resized.split(',')[1];
-      state.originalMime = 'image/jpeg';
+      state.originalBase64 = resized.split(',')[1]; state.originalMime = 'image/jpeg';
       document.getElementById('previewImg').src = resized;
       document.getElementById('previewImg').style.display = 'block';
       document.getElementById('uploadPlaceholder').style.display = 'none';
@@ -229,185 +327,122 @@ function handleFile(input) {
   reader.readAsDataURL(file);
 }
 
-// Drag and drop
 const uploadBox = document.getElementById('uploadBox');
 uploadBox.addEventListener('dragover', e => { e.preventDefault(); uploadBox.classList.add('drag'); });
 uploadBox.addEventListener('dragleave', () => uploadBox.classList.remove('drag'));
 uploadBox.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadBox.classList.remove('drag');
+  e.preventDefault(); uploadBox.classList.remove('drag');
   const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) {
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    document.getElementById('fileInput').files = dt.files;
-    handleFile(document.getElementById('fileInput'));
-  }
+  if (file && file.type.startsWith('image/')) { const dt=new DataTransfer(); dt.items.add(file); document.getElementById('fileInput').files=dt.files; handleFile(document.getElementById('fileInput')); }
 });
 
-function setStatus(msg) {
-  document.getElementById('statusBar').classList.add('active');
-  document.getElementById('statusText').innerHTML = msg;
+function buildGrid() {
+  const grid = document.getElementById('photosGrid'); grid.innerHTML = '';
+  PHOTO_NAMES.forEach((name, i) => {
+    grid.innerHTML += '<div class="photo-card" id="card-'+(i+1)+'"><div class="photo-header"><div><div class="photo-num">Foto '+(i+1)+'</div><div class="photo-name">'+name+'</div></div><div class="photo-status" id="status-'+(i+1)+'"></div></div><div class="photo-placeholder" id="placeholder-'+(i+1)+'">aguardando...</div><div class="photo-actions" id="actions-'+(i+1)+'" style="display:none"></div></div>';
+  });
 }
 
-function hideStatus() {
-  document.getElementById('statusBar').classList.remove('active');
+function renderPhoto(id, b64) {
+  const card = document.getElementById('card-'+id);
+  const ph = document.getElementById('placeholder-'+id); if (ph) ph.remove();
+  const ex = card.querySelector('.photo-img'); if (ex) ex.remove();
+  const img = document.createElement('img'); img.className = 'photo-img'; img.src = 'data:image/jpeg;base64,'+b64;
+  card.querySelector('.photo-actions').before(img);
+  document.getElementById('status-'+id).className = 'photo-status done';
+  document.getElementById('actions-'+id).style.display = 'flex';
+  document.getElementById('actions-'+id).innerHTML = '<button class="btn btn-sm btn-success" onclick="downloadPhoto('+id+')">↓ Baixar</button><button class="btn btn-sm btn-danger" onclick="openModal('+id+')">✕ Reportar erro</button>';
 }
+
+function setStatus(msg) { document.getElementById('statusBar').classList.add('active'); document.getElementById('statusText').innerHTML = msg; }
+function hideStatus() { document.getElementById('statusBar').classList.remove('active'); }
 
 async function startGeneration() {
   if (!state.originalBase64) return;
+  state.productName = document.getElementById('productName').value;
+  state.generatedImages = {}; state.prompts = [];
   document.getElementById('generateBtn').disabled = true;
-
-  // Inicializa grid
   document.getElementById('photosSection').classList.add('active');
   document.getElementById('photosCount').textContent = '0 / 9';
-  const grid = document.getElementById('photosGrid');
-  grid.innerHTML = '';
-  PHOTO_NAMES.forEach((name, i) => {
-    grid.innerHTML += `
-      <div class="photo-card" id="card-${i+1}">
-        <div class="photo-header">
-          <div>
-            <div class="photo-num">Foto ${i+1}</div>
-            <div class="photo-name">${name}</div>
-          </div>
-          <div class="photo-status loading" id="status-${i+1}"></div>
-        </div>
-        <div class="photo-placeholder" id="placeholder-${i+1}">aguardando...</div>
-        <div class="photo-actions" id="actions-${i+1}" style="display:none"></div>
-      </div>`;
-  });
+  buildGrid();
+  PHOTO_NAMES.forEach((_,i) => { document.getElementById('status-'+(i+1)).className='photo-status loading'; });
 
-  // 1. Gemini analisa produto e gera prompts
   setStatus('<strong>Gemini</strong> analisando o produto e criando os 9 prompts...');
   try {
-    const analyzeRes = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        imageBase64: state.originalBase64,
-        mimeType: state.originalMime,
-        productName: document.getElementById('productName').value
-      })
-    });
-    const analyzeData = await analyzeRes.json();
-    state.prompts = analyzeData.prompts || [];
-  } catch (err) {
-    setStatus(`<span style="color:var(--red)">Erro ao analisar produto: ${err.message}</span>`);
-    document.getElementById('generateBtn').disabled = false;
-    return;
+    const res = await fetch('/api/analyze', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ imageBase64: state.originalBase64, mimeType: state.originalMime, productName: state.productName }) });
+    const data = await res.json();
+    if (data.error) throw new Error(data.detail || data.error);
+    state.prompts = data.prompts || [];
+    saveProgress();
+  } catch(err) {
+    setStatus('<span style="color:var(--red)">Erro ao analisar: '+err.message+'</span>');
+    document.getElementById('generateBtn').disabled = false; return;
   }
 
-  // 2. Gera cada foto sequencialmente
   let done = 0;
   for (const p of state.prompts) {
-    setStatus(`<strong>FLUX</strong> gerando foto ${p.id}/9: ${PHOTO_NAMES[p.id-1]}...`);
-    document.getElementById(`status-${p.id}`).className = 'photo-status loading';
-    document.getElementById(`placeholder-${p.id}`).textContent = 'gerando...';
-
+    setStatus('<strong>FLUX</strong> gerando foto '+p.id+'/9 — '+PHOTO_NAMES[p.id-1]+'...');
+    document.getElementById('status-'+p.id).className = 'photo-status loading';
+    document.getElementById('placeholder-'+p.id).textContent = 'gerando...';
     try {
-      const genRes = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: p.prompt, photoId: p.id })
-      });
-      const genData = await genRes.json();
-
-      if (genData.imageBase64) {
-        state.generatedImages[p.id] = genData.imageBase64;
-        const card = document.getElementById(`card-${p.id}`);
-        document.getElementById(`placeholder-${p.id}`).remove();
-        const img = document.createElement('img');
-        img.className = 'photo-img';
-        img.src = `data:image/jpeg;base64,${genData.imageBase64}`;
-        card.querySelector('.photo-actions').before(img);
-        document.getElementById(`status-${p.id}`).className = 'photo-status done';
-        document.getElementById(`actions-${p.id}`).style.display = 'flex';
-        document.getElementById(`actions-${p.id}`).innerHTML = `
-          <button class="btn btn-sm btn-success" onclick="downloadPhoto(${p.id})">↓ Baixar</button>
-          <button class="btn btn-sm btn-danger" onclick="openModal(${p.id})">✕ Reportar erro</button>`;
-        done++;
-        document.getElementById('photosCount').textContent = `${done} / 9`;
-      }
-    } catch (err) {
-      document.getElementById(`status-${p.id}`).className = 'photo-status error';
-      document.getElementById(`placeholder-${p.id}`).textContent = 'erro ao gerar';
-    }
+      const res = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: p.prompt, photoId: p.id }) });
+      const data = await res.json();
+      if (data.imageBase64) { state.generatedImages[p.id]=data.imageBase64; renderPhoto(p.id,data.imageBase64); done++; document.getElementById('photosCount').textContent=done+' / 9'; saveProgress(); }
+    } catch { document.getElementById('status-'+p.id).className='photo-status error'; document.getElementById('placeholder-'+p.id).textContent='erro'; }
   }
 
   hideStatus();
   document.getElementById('generateBtn').disabled = false;
   document.getElementById('generateBtn').textContent = '↺ Gerar novamente';
+  if (done > 0) { saveToHistory(); clearProgress(); }
 }
 
 function downloadPhoto(id) {
-  const b64 = state.generatedImages[id];
-  if (!b64) return;
-  const a = document.createElement('a');
-  a.href = `data:image/jpeg;base64,${b64}`;
-  a.download = `foto-${id}-${PHOTO_NAMES[id-1].toLowerCase().replace(/ /g,'-')}.jpg`;
-  a.click();
+  const b64 = state.generatedImages[id]; if (!b64) return;
+  const a = document.createElement('a'); a.href='data:image/jpeg;base64,'+b64; a.download=(state.productName||'produto')+'-foto'+id+'.jpg'; a.click();
 }
 
-// Modal de feedback
 function openModal(photoId) {
   state.modalPhotoId = photoId;
-  document.getElementById('modalPhotoName').textContent = `Foto ${photoId} — ${PHOTO_NAMES[photoId-1]}`;
+  document.getElementById('modalPhotoName').textContent = 'Foto '+photoId+' — '+PHOTO_NAMES[photoId-1];
   document.getElementById('errorDesc').value = '';
   document.getElementById('feedbackResult').classList.remove('active');
   document.getElementById('feedbackModal').classList.add('active');
 }
-
-function closeModal() {
-  document.getElementById('feedbackModal').classList.remove('active');
-}
+function closeModal() { document.getElementById('feedbackModal').classList.remove('active'); }
 
 async function submitFeedback() {
   const photoId = state.modalPhotoId;
   const errorDesc = document.getElementById('errorDesc').value.trim();
   const genBase64 = state.generatedImages[photoId];
   if (!genBase64 || !state.originalBase64) return;
-
-  document.querySelector('#feedbackModal .btn-primary').textContent = 'Analisando...';
-  document.querySelector('#feedbackModal .btn-primary').disabled = true;
-
+  const btn = document.querySelector('#feedbackModal .btn-primary');
+  btn.textContent = 'Analisando...'; btn.disabled = true;
   try {
-    const res = await fetch('/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        originalBase64: state.originalBase64,
-        generatedBase64: genBase64,
-        originalMime: state.originalMime,
-        generatedMime: 'image/jpeg',
-        errorDescription: errorDesc,
-        photoName: PHOTO_NAMES[photoId-1]
-      })
-    });
+    const res = await fetch('/api/feedback', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ originalBase64: state.originalBase64, generatedBase64: genBase64, originalMime: state.originalMime, generatedMime:'image/jpeg', errorDescription: errorDesc, photoName: PHOTO_NAMES[photoId-1] }) });
     const data = await res.json();
-
-    const result = document.getElementById('feedbackResult');
-    result.classList.add('active');
-    document.getElementById('severityTag').textContent = data.severidade || '';
-    document.getElementById('severityTag').className = `tag ${data.severidade || ''}`;
-    document.getElementById('feedbackSummary').textContent = data.resumo || '';
-    document.getElementById('feedbackErrors').innerHTML = (data.errosDetectados || []).map(e => `<li>${e}</li>`).join('');
-    document.getElementById('rulesUpdated').style.display = data.rulesUpdated ? 'flex' : 'none';
-
-    // Marca o card como erro
-    document.getElementById(`card-${photoId}`).classList.add('error');
-
-  } catch (err) {
-    alert('Erro ao processar feedback: ' + err.message);
-  }
-
-  document.querySelector('#feedbackModal .btn-primary').textContent = 'Analisar e corrigir';
-  document.querySelector('#feedbackModal .btn-primary').disabled = false;
+    document.getElementById('feedbackResult').classList.add('active');
+    document.getElementById('severityTag').textContent = data.severidade||''; document.getElementById('severityTag').className='tag '+(data.severidade||'');
+    document.getElementById('feedbackSummary').textContent = data.resumo||'';
+    document.getElementById('feedbackErrors').innerHTML = (data.errosDetectados||[]).map(e=>'<li>'+e+'</li>').join('');
+    document.getElementById('rulesUpdated').style.display = data.rulesUpdated?'flex':'none';
+    document.getElementById('card-'+photoId).classList.add('error');
+  } catch(err) { alert('Erro: '+err.message); }
+  btn.textContent = 'Analisar e corrigir'; btn.disabled = false;
 }
 
-document.getElementById('feedbackModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('feedbackModal')) closeModal();
-});
+document.getElementById('feedbackModal').addEventListener('click', e => { if (e.target===document.getElementById('feedbackModal')) closeModal(); });
+
+(function init() {
+  updateHistBadge();
+  const saved = loadProgress();
+  if (saved && saved.originalBase64) {
+    const date = new Date(saved.savedAt).toLocaleString('pt-BR');
+    const done = Object.keys(saved.generatedImages||{}).length;
+    document.getElementById('resumeInfo').textContent = (saved.productName||'Produto')+' — '+done+'/9 fotos — salvo em '+date;
+    document.getElementById('resumeBar').classList.add('active');
+  }
+})();
 </script>
 </body>
 </html>
