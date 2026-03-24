@@ -168,6 +168,16 @@ footer{border-top:1px solid var(--border2);padding:28px 40px;display:flex;align-
   <h2 class="sh2">Produto + Cena =<br><span style="color:var(--green)">Prompt Profissional</span></h2>
   <p class="ssub">Preencha os dados do produto, edite as cenas (ou cole as da Luntra) e gere os prompts.</p>
 
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;" id="key-bar">
+    <div style="display:flex;align-items:center;gap:8px;flex:1;">
+      <span style="font-family:var(--fm);font-size:10px;color:var(--green);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;">Chave Google AI</span>
+      <input type="password" id="gemini-key-inp" placeholder="AIzaSy..." style="flex:1;padding:8px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--fm);font-size:12px;outline:none;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border2)'">
+    </div>
+    <button onclick="saveGeminiKey()" style="padding:8px 18px;background:var(--green);color:var(--bg);border:none;border-radius:6px;font-family:var(--fb);font-size:12px;font-weight:700;cursor:pointer;">Salvar</button>
+    <span style="font-size:11px;color:var(--muted);">Grátis em <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--cyan);">aistudio.google.com/apikey</a></span>
+  </div>
+  <div id="key-ok" style="display:none;font-family:var(--fm);font-size:11px;color:var(--green);margin-bottom:12px;align-items:center;gap:6px;">&#10003; Chave do Gemini salva &mdash; pode gerar!</div>
+
   <div class="tool-card">
     <div class="tool-hdr">
       <span class="tool-ttl">// LUNTRA ENGINE — Gerador de Prompts · Claude</span>
@@ -273,6 +283,7 @@ footer{border-top:1px solid var(--border2);padding:28px 40px;display:flex;align-
 <script>
 var allPrompts = [];
 var cenaCount = 0;
+var GEMINI_KEY = localStorage.getItem('gemini_key') || '';
 
 var DEFAULT_CENAS = [
   {titulo:'Studio White',       desc:'Apresentação pura do produto em fundo branco, focando em suas cores e design sem distrações.'},
@@ -282,6 +293,24 @@ var DEFAULT_CENAS = [
   {titulo:'Zoom Sensorial',      desc:'Foco na textura e nos detalhes de qualidade do material.'},
   {titulo:'Infográfico',         desc:'Apresentação clara dos atributos físicos e diferenciais do produto.'},
 ];
+
+function saveGeminiKey() {
+  var v = document.getElementById('gemini-key-inp').value.trim();
+  if (!v) return;
+  GEMINI_KEY = v;
+  localStorage.setItem('gemini_key', v);
+  document.getElementById('key-ok').style.display = 'flex';
+  document.getElementById('key-bar').style.display = 'none';
+}
+
+// Restaurar chave salva
+if (GEMINI_KEY) {
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('gemini-key-inp').value = GEMINI_KEY;
+    document.getElementById('key-ok').style.display = 'flex';
+    document.getElementById('key-bar').style.display = 'none';
+  });
+}
 
 function initCenas() {
   DEFAULT_CENAS.forEach(function(c) { addCena(c.titulo, c.desc); });
@@ -327,6 +356,7 @@ async function generate() {
   var err   = document.getElementById('errmsg');
   var cenas = getCenas();
 
+  if (!GEMINI_KEY) { err.textContent='Cole e salve sua chave do Google AI Studio acima.'; err.style.display='block'; return; }
   if (!desc) { err.textContent='Descreva o produto antes de gerar.'; err.style.display='block'; return; }
   if (cenas.length === 0) { err.textContent='Adicione pelo menos uma cena.'; err.style.display='block'; return; }
   err.style.display='none';
@@ -418,19 +448,26 @@ async function buildPrompt(produto, titulo, descCena, formato, estilo) {
     'Output ONLY the prompt text. No explanations, no labels, no markdown. Max 100 words.\n' +
     'No text overlays, no watermarks, no logos in the generated image.';
 
-  var res = await fetch('https://api.anthropic.com/v1/messages', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:200,
-      system: system,
-      messages:[{role:'user', content:msg}]
-    })
-  });
+  if (!GEMINI_KEY) throw new Error('Cole sua chave do Google AI Studio no campo acima.');
+  var res = await fetch(
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=' + GEMINI_KEY,
+    {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        system_instruction:{ parts:[{ text: system }] },
+        contents:[{ parts:[{ text: msg }] }],
+        generationConfig:{ maxOutputTokens:200, temperature:0.7 }
+      })
+    }
+  );
+  if (!res.ok) {
+    var ej = await res.json().catch(function(){return {};});
+    throw new Error(ej.error && ej.error.message ? ej.error.message : 'Erro ' + res.status);
+  }
   var data = await res.json();
-  var txt = data.content && data.content[0] ? data.content[0].text.trim() : '';
-  if (!txt) throw new Error('sem resposta');
+  var txt = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text.trim() : '';
+  if (!txt) throw new Error('Resposta vazia do Gemini.');
   return txt;
 }
 
