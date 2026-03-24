@@ -299,12 +299,15 @@ var PRODUCT_IMG_B64 = null;
 var PRODUCT_IMG_MIME = 'image/jpeg';
 
 var DEFAULT_CENAS = [
-  {titulo:'Studio White',       desc:'Apresentação pura do produto em fundo branco, focando em suas cores e design sem distrações.'},
-  {titulo:'Dimensões e Ambiente',desc:'Cenário de uso real com indicação das medidas disponíveis através de setas de cota.'},
-  {titulo:'Benefício Principal', desc:'Imagem focada no apelo emocional e no encantamento do cliente.'},
-  {titulo:'Praticidade',         desc:'Destaca a utilidade e praticidade do produto no dia a dia.'},
-  {titulo:'Zoom Sensorial',      desc:'Foco na textura e nos detalhes de qualidade do material.'},
-  {titulo:'Infográfico',         desc:'Apresentação clara dos atributos físicos e diferenciais do produto.'},
+  {titulo:'Studio White',            desc:'Apresentação pura do produto em fundo branco, focando em suas cores vibrantes e design sem distrações.'},
+  {titulo:'Dimensões e Ambiente',    desc:'Cenário de uso real com indicação exata das três medidas disponíveis através de setas de cota.'},
+  {titulo:'Benefício Principal',     desc:'Imagem focada no apelo emocional e no encantamento do cliente através da embalagem.'},
+  {titulo:'Praticidade e Segurança', desc:'Destaca a utilidade do fundo plano (SOS) e da sanfona para acomodar caixas com firmeza e não tombar.'},
+  {titulo:'Zoom Sensorial',          desc:'Foco na textura do papel Kraft e nos detalhes de impressão premium da embalagem.'},
+  {titulo:'Infográfico de Ativos',   desc:'Apresentação clara dos atributos físicos da embalagem (gramatura, sanfona, design).'},
+  {titulo:'Versatilidade e Nichos',  desc:'Demonstra a embalagem sendo usada em 4 cenários diferentes de doceria, cobrindo o mercado.'},
+  {titulo:'Ativos e Princípios',     desc:'Foco na matéria-prima e segurança alimentar do material kraft.'},
+  {titulo:'Comparativo Premium',     desc:'Batalha visual entre a embalagem exclusiva da marca e um saco genérico comum.'},
 ];
 
 function handleProductImg(input) {
@@ -489,7 +492,7 @@ async function buildPrompt(produto, titulo, descCena, formato, estilo) {
   parts.push({ text: msg });
 
   var res = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=' + GEMINI_KEY,
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=' + GEMINI_KEY,
     {
       method:'POST',
       headers:{'Content-Type':'application/json'},
