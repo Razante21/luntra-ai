@@ -188,8 +188,19 @@ footer{border-top:1px solid var(--border2);padding:28px 40px;display:flex;align-
       <!-- COL 1: PRODUTO -->
       <div class="col-prod">
         <div>
+          <label class="flbl">Foto do Produto (Opcional mas recomendado)</label>
+          <div id="img-drop" style="border:2px dashed rgba(0,255,106,0.2);border-radius:8px;padding:16px;text-align:center;cursor:pointer;background:rgba(0,255,106,.02);transition:all .2s;position:relative;overflow:hidden;min-height:80px;display:flex;align-items:center;justify-content:center;" onclick="document.getElementById('img-file').click()" onmouseover="this.style.borderColor='var(--green)'" onmouseout="if(!PRODUCT_IMG_B64)this.style.borderColor='rgba(0,255,106,0.2)'">
+            <input type="file" id="img-file" accept="image/*" style="display:none" onchange="handleProductImg(this)">
+            <div id="img-drop-content" style="pointer-events:none">
+              <div style="font-size:20px;margin-bottom:4px">&#128247;</div>
+              <div style="font-size:11px;color:var(--muted)"><strong style="color:var(--green)">Clique</strong> para enviar a foto<br><span style="font-size:10px">O Gemini vai analisar a imagem real</span></div>
+            </div>
+            <img id="img-preview" style="display:none;max-height:80px;max-width:100%;border-radius:5px;object-fit:contain;" alt="preview">
+          </div>
+        </div>
+        <div>
           <label class="flbl">Descrição do Produto *</label>
-          <textarea class="ta" id="desc" style="height:110px" placeholder="Ex: Caixa kraft para doceria, fundo plano, sanfona lateral, 3 tamanhos disponíveis, impressão premium, segurança alimentar..."></textarea>
+          <textarea class="ta" id="desc" style="height:80px" placeholder="Ex: Caixa kraft para doceria, fundo plano, sanfona lateral, 3 tamanhos disponíveis, impressão premium, segurança alimentar..."></textarea>
         </div>
         <div>
           <label class="flbl">Formato</label>
@@ -284,6 +295,8 @@ footer{border-top:1px solid var(--border2);padding:28px 40px;display:flex;align-
 var allPrompts = [];
 var cenaCount = 0;
 var GEMINI_KEY = localStorage.getItem('gemini_key') || '';
+var PRODUCT_IMG_B64 = null;
+var PRODUCT_IMG_MIME = 'image/jpeg';
 
 var DEFAULT_CENAS = [
   {titulo:'Studio White',       desc:'Apresentação pura do produto em fundo branco, focando em suas cores e design sem distrações.'},
@@ -293,6 +306,23 @@ var DEFAULT_CENAS = [
   {titulo:'Zoom Sensorial',      desc:'Foco na textura e nos detalhes de qualidade do material.'},
   {titulo:'Infográfico',         desc:'Apresentação clara dos atributos físicos e diferenciais do produto.'},
 ];
+
+function handleProductImg(input) {
+  var file = input.files[0];
+  if (!file) return;
+  PRODUCT_IMG_MIME = file.type || 'image/jpeg';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    PRODUCT_IMG_B64 = e.target.result.split(',')[1];
+    var preview = document.getElementById('img-preview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    document.getElementById('img-drop-content').style.display = 'none';
+    document.getElementById('img-drop').style.borderColor = 'var(--green)';
+    document.getElementById('img-drop').style.background = 'rgba(0,255,106,.05)';
+  };
+  reader.readAsDataURL(file);
+}
 
 function saveGeminiKey() {
   var v = document.getElementById('gemini-key-inp').value.trim();
@@ -416,7 +446,7 @@ async function buildPrompt(produto, titulo, descCena, formato, estilo) {
   var ratio    = formato === '9:16' ? '9:16 vertical portrait' : formato === '4:3' ? '4:3 landscape' : '1:1 square';
 
   var system =
-    'You are a senior e-commerce visual strategist and AI image prompt engineer specializing in Brazilian marketplace product photography.\n\n' +
+    'You are a senior e-commerce visual strategist and AI image prompt engineer specializing in Brazilian marketplace product photography.\n' + +
     'You deeply understand:\n' +
     '- How marketplace algorithms reward high-quality product images with organic visibility\n' +
     '- How Brazilian online shoppers visually scan listings on Mercado Livre, Shopee and Amazon Brasil\n' +
@@ -428,7 +458,8 @@ async function buildPrompt(produto, titulo, descCena, formato, estilo) {
 
   var msg =
     '## Product\n' +
-    produto + '\n\n' +
+    produto + '\n' +
+    (PRODUCT_IMG_B64 ? '(A photo of the actual product is attached — analyze it carefully to describe colors, materials, textures, shapes, branding and any other visible details accurately.)' : '(No product photo provided — use only the text description below.)') + '\n\n' +
     '## Target Platform\n' +
     platform + '\n\n' +
     '## Image Dimensions\n' +
@@ -449,6 +480,14 @@ async function buildPrompt(produto, titulo, descCena, formato, estilo) {
     'No text overlays, no watermarks, no logos in the generated image.';
 
   if (!GEMINI_KEY) throw new Error('Cole sua chave do Google AI Studio no campo acima.');
+
+  // Monta as partes do conteúdo — inclui imagem se disponível
+  var parts = [];
+  if (PRODUCT_IMG_B64) {
+    parts.push({ inline_data: { mime_type: PRODUCT_IMG_MIME, data: PRODUCT_IMG_B64 } });
+  }
+  parts.push({ text: msg });
+
   var res = await fetch(
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=' + GEMINI_KEY,
     {
@@ -456,7 +495,7 @@ async function buildPrompt(produto, titulo, descCena, formato, estilo) {
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         system_instruction:{ parts:[{ text: system }] },
-        contents:[{ parts:[{ text: msg }] }],
+        contents:[{ parts: parts }],
         generationConfig:{ maxOutputTokens:200, temperature:0.7 }
       })
     }
